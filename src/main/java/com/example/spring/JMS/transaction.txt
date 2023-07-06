@@ -1,0 +1,47 @@
+<<Spring Transaction Management>>
+트랜잭션:
+ - 완전히 성공하거나 완전히 실패하는 일련의 논리적 작업단위
+ - 데이터베이스 관리 시스템 등의 상호작용 단위
+목적: 오류로부터 복구 허용, 데이터베이스 일관성있게 유지하는 안정적 작업 단위 제공
+예: 은행 계좌이체 - 출금과 입금 중 하나의 프로세스가 실패해도 전체 프로세스 실패로 이어짐
+
+롤백: 트랜잭션의 모든 단계 이전으로 되돌리는 것
+
+org.springframework.transaction.PlatformTransactionManage 인터페이스
+
+<<@Transactional>>
+소스코드에 직접 트랜잭션 관련 로직 넣지 않아 비즈니스 로직과 분리되어 널리 사용
+
+/*
+개별 메서드 또는 클래스의 트랜잭션 특성을 설명합니다.
+
+이 주석이 클래스 수준에서 선언되면 선언하는 클래스 및 해당 하위 클래스의 모든 메서드에 기본값으로 적용됩니다. 클래스 계층의 상위 클래스에는 적용되지 않습니다. 상속된 메서드는 하위 클래스 수준 주석에 참여하기 위해 로컬에서 다시 선언해야 합니다. 메소드 가시성 제약에 대한 자세한 내용은 참조 매뉴얼의 트랜잭션 관리 섹션을 참조하십시오.
+
+이 주석은 일반적으로 Spring의 org.springframework.transaction.interceptor.RuleBasedTransactionAttribute 클래스와 직접 비교할 수 있으며 실제로 AnnotationTransactionAttributeSource는 이 주석의 속성을 RuleBasedTransactionAttribute의 속성으로 직접 변환하므로 Spring의 트랜잭션 지원 코드는 주석에 대해 알 필요가 없습니다.
+
+Attribute Semantics
+
+이 주석에 사용자 지정 롤백 규칙이 구성되지 않은 경우 트랜잭션은 RuntimeException 및 Error 시 롤백되지만 확인된 예외에서는 롤백되지 않습니다.
+
+롤백 규칙은 지정된 예외가 throw될 때 트랜잭션을 롤백해야 하는지 여부를 결정하며 규칙은 패턴을 기반으로 합니다. 패턴은 현재 와일드카드 지원이 없는 정규화된 클래스 이름 또는 예외 유형(Throwable의 하위 클래스여야 함)에 대한 정규화된 클래스 이름의 하위 문자열일 수 있습니다. 예를 들어 "javax.servlet.ServletException" 또는 "ServletException" 값은 javax.servlet.ServletException 및 해당 하위 클래스와 일치합니다.
+
+롤백 규칙은 각각 패턴을 클래스 참조 또는 문자열로 지정할 수 있도록 하는 rollbackFor/noRollbackFor 및 rollbackForClassName/noRollbackForClassName을 통해 구성할 수 있습니다. 예외 유형이 클래스 참조로 지정되면 정규화된 이름이 패턴으로 사용됩니다. 결과적으로 @Transactional(rollbackFor = example.CustomException.class)은 @Transactional(rollbackForClassName = "example.CustomException")과 동일합니다.
+
+경고: 패턴이 얼마나 구체적인지, 패키지 정보를 포함할지 여부를 신중하게 고려해야 합니다
+(필수 사항은 아님).
+예를 들어 "예외"는 거의 모든 항목과 일치하며 다른 규칙을 숨길 수 있습니다. "Exception"이 검사된 모든 예외에 대한 규칙을 정의하려는 경우 "java.lang.Exception"이 정확합니다. "BaseBusinessException"과 같은 보다 고유한 예외 이름을 사용하면 예외 패턴에 대해 완전한 클래스 이름을 사용할 필요가 없을 것입니다.
+또한 롤백 규칙으로 인해 유사한 이름의 예외 및 중첩 클래스에 대해 의도하지 않은 일치가 발생할 수 있습니다. 이는 throw된 예외의 이름에 롤백 규칙에 대해 구성된 예외 패턴이 포함된 경우 throw된 예외가 지정된 롤백 규칙과 일치하는 것으로 간주되기 때문입니다.
+예를 들어, com.example.CustomException에서 일치하도록 구성된 규칙이 주어지면 해당 규칙은 com.example.CustomExceptionV2라는 예외(CustomException과 동일한 패키지에 있지만 추가 접미사가 있는 예외) 또는 com이라는 예외와 일치합니다. example.CustomException$AnotherException(CustomException에서 중첩 클래스로 선언된 예외).
+
+이 주석에 있는 다른 속성의 의미에 대한 특정 정보는 TransactionDefinition 및 org.springframework.transaction.interceptor.TransactionAttribute javadoc을 참조하십시오.
+
+**트랜잭션 관리**
+이 주석은 일반적으로 org.springframework.transaction.PlatformTransactionManager에 의해 관리되는 스레드 바운드 트랜잭션과 함께 작동하여 현재 실행 스레드 내의 모든 데이터 액세스 작업에 트랜잭션을 노출합니다. 참고: 이것은 메서드 내에서 새로 시작된 스레드로 전파되지 않습니다.
+또는 이 주석은 스레드 로컬 변수 대신 Reactor 컨텍스트를 사용하는 org.springframework.transaction.ReactiveTransactionManager에 의해 관리되는 반응 트랜잭션을 구분할 수 있습니다. 결과적으로 모든 참여 데이터 액세스 작업은 동일한 리액티브 파이프라인의 동일한 Reactor 컨텍스트 내에서 실행되어야 합니다.
+
+Since:1.2
+See Also :org.springframework.transaction.interceptor.TransactionAttribute, org.springframework.transaction.interceptor.DefaultTransactionAttribute, org.springframework.transaction.interceptor.RuleBasedTransactionAttribute
+작가:콜린 삼팔레아누, 유르겐 홀러, 샘 브래넌, 마크 팔루치
+*/
+
+
