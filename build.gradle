@@ -31,6 +31,8 @@ dependencies {
 	//비동기 메시지 전송
 	implementation 'org.springframework.boot:spring-boot-starter-activemq'
 	implementation 'org.springframework.boot:spring-boot-starter-artemis'
+	//메일
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 tasks.named('test') {

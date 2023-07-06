@@ -18,40 +18,40 @@ import javax.jms.Queue;
 public class BackOfficeConfiguration {
 
     @Bean
-    public ConnectionFactory connectionFactory() {
+    public ConnectionFactory connectionFactoryB() {
         return new ActiveMQConnectionFactory("tcp://localhost:61616");
     }
 
     @Bean
-    public Queue mailDestination() {
+    public Queue mailDestinationB() {
         return new ActiveMQQueue("mail.queue");
     }
 
     @Bean
-    public JmsTemplate jmsTemplate() {
+    public JmsTemplate jmsTemplateB() {
         JmsTemplate jmsTemplate = new JmsTemplate();
-        jmsTemplate.setConnectionFactory(connectionFactory());
+        jmsTemplate.setConnectionFactory(connectionFactoryB());
         jmsTemplate.setDefaultDestinationName("mail.queue");
-        jmsTemplate.setMessageConverter(mailMessageConverter());
+        jmsTemplate.setMessageConverter(mailMessageConverterB());
         jmsTemplate.setReceiveTimeout(10000);
         return jmsTemplate;
     }
 
     @Bean
-    public MailMessageConverter mailMessageConverter() {
+    public MailMessageConverter mailMessageConverterB() {
         return new MailMessageConverter();
     }
 
     //트랜잭션 관리
     @Bean
-    public PlatformTransactionManager transactionManager() {
-        return new JmsTransactionManager(connectionFactory());
+    public PlatformTransactionManager transactionManagerB() {
+        return new JmsTransactionManager(connectionFactoryB());
     }
 
     @Bean
     public BackOfficeImpl backOffice() {
         BackOfficeImpl backOffice = new BackOfficeImpl();
-        backOffice.setJmsTemplate(jmsTemplate());
+        backOffice.setJmsTemplate(jmsTemplateB());
         return backOffice;
     }
 
